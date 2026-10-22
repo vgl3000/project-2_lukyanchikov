@@ -1,4 +1,5 @@
 
+from primitive_db.decorators import handle_db_errors
 from primitive_db.utils import load_table_data
 
 
@@ -42,6 +43,7 @@ def list_tables(metadata):
         print(f"- {table_name}")
 
 
+@handle_db_errors
 def insert(metadata, table_name, values):
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
@@ -68,11 +70,7 @@ def insert(metadata, table_name, values):
         value = values[i]
 
         if column_type == "int":
-            try:
-                value = int(value)
-            except ValueError:
-                print(f'Ошибка: Столбец "{name}" должен быть int.')
-                return None
+            value = int(value)
 
         elif column_type == "bool":
             if value.lower() == "true":
@@ -80,8 +78,7 @@ def insert(metadata, table_name, values):
             elif value.lower() == "false":
                 value = False
             else:
-                print(f'Ошибка: Столбец "{name}" должен быть bool.')
-                return None
+                raise ValueError(f'Столбец "{name}" должен быть bool.')
 
         new_record[name] = value
 

@@ -6,6 +6,7 @@ from prettytable import PrettyTable
 
 from primitive_db.core import (
     create_table,
+    delete,
     drop_table,
     insert,
     list_tables,
@@ -31,6 +32,7 @@ def welcome():
     print("select from <таблица> - показать записи")
     print("select from <таблица> where <столбец> = <значение> - поиск")
     print("update <таблица> set <столбец> = <значение> where ... - изменение")
+    print("delete from <таблица> where <столбец> = <значение> - удаление")
     print("help - справка")
     print("exit - выход")
 
@@ -45,6 +47,7 @@ def welcome():
             print("select from <таблица> - показать записи")
             print("select from <таблица> where <столбец> = <значение> - поиск")
             print("update <таблица> set <столбец> = <значение> where ... - изменение")
+            print("delete from <таблица> where <столбец> = <значение> - удаление")
             print("help - справка")
             print("exit - выход")
 
@@ -268,6 +271,73 @@ def welcome():
             save_table_data(table_name, updated_data)
 
             print(f"Обновлено записей: {len(found)}.")
+
+        elif command.startswith("delete from "):
+            try:
+                parts = shlex.split(command)
+            except ValueError:
+                print("Ошибка: Проверьте кавычки.")
+                continue
+
+            if (
+                len(parts) != 7
+                or parts[1] != "from"
+                or parts[3] != "where"
+                or parts[5] != "="
+            ):
+                print('Пример: delete from users where name = "Anna"')
+                continue
+
+            table_name = parts[2]
+
+            if table_name not in metadata:
+                print(f'Ошибка: Таблица "{table_name}" не существует.')
+                continue
+
+            column_name = parts[4]
+            value = parts[6]
+            column_type = None
+
+            for column in metadata[table_name]:
+                name, data_type = column.split(":")
+
+                if name == column_name:
+                    column_type = data_type
+                    break
+
+            if column_type is None:
+                print(f'Ошибка: Столбец "{column_name}" не существует.')
+                continue
+
+            if column_type == "int":
+                try:
+                    value = int(value)
+                except ValueError:
+                    print("Ошибка: Ожидалось целое число.")
+                    continue
+
+            elif column_type == "bool":
+                if value.lower() == "true":
+                    value = True
+                elif value.lower() == "false":
+                    value = False
+                else:
+                    print("Ошибка: Ожидалось true или false.")
+                    continue
+
+            where_clause = {column_name: value}
+            table_data = load_table_data(table_name)
+
+            found = select(table_data, where_clause)
+
+            if not found:
+                print("Записи не найдены.")
+                continue
+
+            new_data = delete(table_data, where_clause)
+            save_table_data(table_name, new_data)
+
+            print(f"Удалено записей: {len(found)}.")
 
         elif command == "exit":
             print("Выход из программы")

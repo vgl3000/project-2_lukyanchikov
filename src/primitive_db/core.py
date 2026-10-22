@@ -123,3 +123,20 @@ def update(table_data, set_clause, where_clause):
                 row[column] = value
 
     return table_data
+
+
+def delete(table_data, where_clause):
+    result = []
+
+    for row in table_data:
+        matches = True
+
+        for column, value in where_clause.items():
+            if row.get(column) != value:
+                matches = False
+                break
+
+        if not matches:
+            result.append(row)
+
+    return result

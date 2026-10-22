@@ -87,3 +87,23 @@ def insert(metadata, table_name, values):
 
     table_data.append(new_record)
     return table_data
+
+
+def select(table_data, where_clause=None):
+    if where_clause is None:
+        return table_data
+
+    result = []
+
+    for row in table_data:
+        matches = True
+
+        for column, value in where_clause.items():
+            if row.get(column) != value:
+                matches = False
+                break
+
+        if matches:
+            result.append(row)
+
+    return result

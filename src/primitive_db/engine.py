@@ -1,6 +1,6 @@
 import prompt
 
-from primitive_db.core import create_table, list_tables
+from primitive_db.core import create_table, drop_table, list_tables
 
 
 def welcome():
@@ -29,6 +29,14 @@ def welcome():
             else:
                 create_table(metadata, parts[1], parts[2:])
 
+        elif command == "drop_table" or command.startswith("drop_table "):
+            parts = command.split()
+
+            if len(parts) != 2:
+                print("Укажите имя таблицы")
+            else:
+                drop_table(metadata, parts[1])
+                
         elif command == "list_tables":
             list_tables(metadata)
 

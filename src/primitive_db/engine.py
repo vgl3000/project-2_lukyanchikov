@@ -16,3 +16,5 @@ def welcome():
         elif command == "exit":
             print("Выход из программы")
             break
+        else:
+            print("Неизвестная команда. Попробуйте снова.")

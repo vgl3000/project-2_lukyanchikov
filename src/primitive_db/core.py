@@ -20,5 +20,9 @@ def create_table(metadata, table_name, columns):
     return metadata
 
 def drop_table(metadata, table_name):
+    if table_name not in metadata:
+        print(f'Ошибка: Таблица "{table_name}" не существует.')
+        return metadata
+
     del metadata[table_name]
     return metadata

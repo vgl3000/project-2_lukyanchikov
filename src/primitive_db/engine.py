@@ -68,8 +68,16 @@ def welcome():
             if len(parts) != 2:
                 print("Укажите имя таблицы")
             else:
-                drop_table(metadata, parts[1])
-                save_metadata("db_meta.json", metadata)
+                table_name = parts[1]
+
+                if table_name not in metadata:
+                    print(f'Ошибка: Таблица "{table_name}" не существует.')
+                else:
+                    result = drop_table(metadata, table_name)
+
+                    if result is not None:
+                        save_metadata("db_meta.json", metadata)
+                        print(f'Таблица "{table_name}" удалена.')
 
         elif command == "list_tables":
             list_tables(metadata)
@@ -337,9 +345,10 @@ def welcome():
                 continue
 
             new_data = delete(table_data, where_clause)
-            save_table_data(table_name, new_data)
 
-            print(f"Удалено записей: {len(found)}.")
+            if new_data is not None:
+                save_table_data(table_name, new_data)
+                print(f"Удалено записей: {len(found)}.")
 
         elif command == "info" or command.startswith("info "):
             parts = command.split()

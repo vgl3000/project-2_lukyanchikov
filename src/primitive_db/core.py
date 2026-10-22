@@ -1,5 +1,5 @@
 
-from primitive_db.decorators import handle_db_errors
+from primitive_db.decorators import confirm_action, handle_db_errors
 from primitive_db.utils import load_table_data
 
 
@@ -25,6 +25,7 @@ def create_table(metadata, table_name, columns):
     return metadata
 
 
+@confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
@@ -122,6 +123,7 @@ def update(table_data, set_clause, where_clause):
     return table_data
 
 
+@confirm_action("удаление записей")
 def delete(table_data, where_clause):
     result = []
 

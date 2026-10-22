@@ -31,6 +31,7 @@ def welcome():
                 print("Укажите имя таблицы и столбцы")
             else:
                 create_table(metadata, parts[1], parts[2:])
+                save_metadata("db_meta.json", metadata)
 
         elif command == "drop_table" or command.startswith("drop_table "):
             parts = command.split()
@@ -49,5 +50,4 @@ def welcome():
             break
 
         else:
-            create_table(metadata, parts[1], parts[2:])
-            save_metadata("db_meta.json", metadata)
+            print("Неизвестная команда. Попробуйте снова.")

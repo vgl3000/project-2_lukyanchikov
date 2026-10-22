@@ -9,6 +9,7 @@ def welcome():
     print("Первая попытка запустить проект!")
     print("create_table - создать таблицу")
     print("list_tables - список таблиц")
+    print("drop_table - удалить таблицу")
     print("help - справка")
     print("exit - выход")
 
@@ -18,6 +19,7 @@ def welcome():
         if command == "help":
             print("create_table - создать таблицу")
             print("list_tables - список таблиц")
+            print("drop_table - удалить таблицу")
             print("help - справка")
             print("exit - выход")
 
@@ -36,7 +38,7 @@ def welcome():
                 print("Укажите имя таблицы")
             else:
                 drop_table(metadata, parts[1])
-                
+
         elif command == "list_tables":
             list_tables(metadata)
 

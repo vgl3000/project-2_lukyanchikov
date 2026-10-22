@@ -1,5 +1,9 @@
 
-from primitive_db.decorators import confirm_action, handle_db_errors
+from primitive_db.decorators import (
+    confirm_action,
+    handle_db_errors,
+    log_time,
+)
 from primitive_db.utils import load_table_data
 
 
@@ -45,6 +49,7 @@ def list_tables(metadata):
 
 
 @handle_db_errors
+@log_time
 def insert(metadata, table_name, values):
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
@@ -87,6 +92,7 @@ def insert(metadata, table_name, values):
     return table_data
 
 
+@log_time
 def select(table_data, where_clause=None):
     if where_clause is None:
         return table_data

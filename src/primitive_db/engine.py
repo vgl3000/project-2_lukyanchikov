@@ -33,6 +33,7 @@ def welcome():
     print("select from <таблица> where <столбец> = <значение> - поиск")
     print("update <таблица> set <столбец> = <значение> where ... - изменение")
     print("delete from <таблица> where <столбец> = <значение> - удаление")
+    print("info <таблица> - информация о таблице")
     print("help - справка")
     print("exit - выход")
 
@@ -48,6 +49,7 @@ def welcome():
             print("select from <таблица> where <столбец> = <значение> - поиск")
             print("update <таблица> set <столбец> = <значение> where ... - изменение")
             print("delete from <таблица> where <столбец> = <значение> - удаление")
+            print("info <таблица> - информация о таблице")
             print("help - справка")
             print("exit - выход")
 
@@ -338,6 +340,26 @@ def welcome():
             save_table_data(table_name, new_data)
 
             print(f"Удалено записей: {len(found)}.")
+
+        elif command == "info" or command.startswith("info "):
+            parts = command.split()
+
+            if len(parts) != 2:
+                print("Пример: info users")
+                continue
+
+            table_name = parts[1]
+
+            if table_name not in metadata:
+                print(f'Ошибка: Таблица "{table_name}" не существует.')
+                continue
+
+            columns = metadata[table_name]
+            table_data = load_table_data(table_name)
+
+            print(f"Таблица: {table_name}")
+            print(f"Столбцы: {', '.join(columns)}")
+            print(f"Количество записей: {len(table_data)}")
 
         elif command == "exit":
             print("Выход из программы")

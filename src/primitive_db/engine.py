@@ -1,4 +1,6 @@
 
+import shlex
+
 import prompt
 from prettytable import PrettyTable
 
@@ -20,6 +22,7 @@ def welcome():
     print("drop_table - удалить таблицу")
     print("insert into <таблица> values (...) - добавить запись")
     print("select from <таблица> - показать записи")
+    print("select from <таблица> where <столбец> = <значение> - поиск")
     print("help - справка")
     print("exit - выход")
 
@@ -32,6 +35,7 @@ def welcome():
             print("drop_table - удалить таблицу")
             print("insert into <таблица> values (...) - добавить запись")
             print("select from <таблица> - показать записи")
+            print("select from <таблица> where <столбец> = <значение> - поиск")
             print("help - справка")
             print("exit - выход")
 
@@ -83,36 +87,82 @@ def welcome():
                         print(f'Запись добавлена в таблицу "{table_name}".')
 
         elif command.startswith("select from "):
-            parts = command.split()
+            try:
+                parts = shlex.split(command)
+            except ValueError:
+                print("Ошибка: Проверьте кавычки.")
+                continue
 
-            if len(parts) != 3:
-                print("Пример: select from users")
-            else:
-                table_name = parts[2]
+            if len(parts) != 3 and len(parts) != 7:
+                print("Пример: select from users where age = 20")
+                continue
 
-                if table_name not in metadata:
-                    print(f'Ошибка: Таблица "{table_name}" не существует.')
-                else:
-                    table_data = load_table_data(table_name)
-                    result = select(table_data)
+            table_name = parts[2]
 
-                    table = PrettyTable()
-                    column_names = []
+            if table_name not in metadata:
+                print(f'Ошибка: Таблица "{table_name}" не существует.')
+                continue
 
-                    for column in metadata[table_name]:
-                        column_names.append(column.split(":")[0])
+            where_clause = None
 
-                    table.field_names = column_names
+            if len(parts) == 7:
+                if parts[3] != "where" or parts[5] != "=":
+                    print("Ошибка: Неверное условие where.")
+                    continue
 
-                    for row in result:
-                        values = []
+                column_name = parts[4]
+                value = parts[6]
+                column_type = None
 
-                        for name in column_names:
-                            values.append(row[name])
+                for column in metadata[table_name]:
+                    name, data_type = column.split(":")
 
-                        table.add_row(values)
+                    if name == column_name:
+                        column_type = data_type
+                        break
 
-                    print(table)
+                if column_type is None:
+                    print(f'Ошибка: Столбец "{column_name}" не существует.')
+                    continue
+
+                if column_type == "int":
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        print("Ошибка: Ожидалось целое число.")
+                        continue
+
+                elif column_type == "bool":
+                    if value.lower() == "true":
+                        value = True
+                    elif value.lower() == "false":
+                        value = False
+                    else:
+                        print("Ошибка: Ожидалось true или false.")
+                        continue
+
+                where_clause = {column_name: value}
+
+            table_data = load_table_data(table_name)
+            result = select(table_data, where_clause)
+
+            table = PrettyTable()
+            column_names = []
+
+            for column in metadata[table_name]:
+                column_names.append(column.split(":")[0])
+
+            table.field_names = column_names
+
+            for row in result:
+                values = []
+
+                for name in column_names:
+                    values.append(row[name])
+
+                table.add_row(values)
+
+            print(table)
 
         elif command == "exit":
             print("Выход из программы")

@@ -1,7 +1,7 @@
 import prompt
 
 from primitive_db.core import create_table, drop_table, list_tables
-from primitive_db.utils import load_metadata
+from primitive_db.utils import load_metadata, save_metadata
 
 
 def welcome():
@@ -39,6 +39,7 @@ def welcome():
                 print("Укажите имя таблицы")
             else:
                 drop_table(metadata, parts[1])
+                save_metadata("db_meta.json", metadata)
 
         elif command == "list_tables":
             list_tables(metadata)
@@ -48,4 +49,5 @@ def welcome():
             break
 
         else:
-            print("Неизвестная команда. Попробуйте снова.")
+            create_table(metadata, parts[1], parts[2:])
+            save_metadata("db_meta.json", metadata)

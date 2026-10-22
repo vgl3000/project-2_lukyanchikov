@@ -107,3 +107,19 @@ def select(table_data, where_clause=None):
             result.append(row)
 
     return result
+
+
+def update(table_data, set_clause, where_clause):
+    for row in table_data:
+        matches = True
+
+        for column, value in where_clause.items():
+            if row.get(column) != value:
+                matches = False
+                break
+
+        if matches:
+            for column, value in set_clause.items():
+                row[column] = value
+
+    return table_data

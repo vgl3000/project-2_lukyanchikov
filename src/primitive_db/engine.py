@@ -4,7 +4,14 @@ import shlex
 import prompt
 from prettytable import PrettyTable
 
-from primitive_db.core import create_table, drop_table, insert, list_tables, select
+from primitive_db.core import (
+    create_table,
+    drop_table,
+    insert,
+    list_tables,
+    select,
+    update,
+)
 from primitive_db.utils import (
     load_metadata,
     load_table_data,
@@ -23,6 +30,7 @@ def welcome():
     print("insert into <таблица> values (...) - добавить запись")
     print("select from <таблица> - показать записи")
     print("select from <таблица> where <столбец> = <значение> - поиск")
+    print("update <таблица> set <столбец> = <значение> where ... - изменение")
     print("help - справка")
     print("exit - выход")
 
@@ -36,6 +44,7 @@ def welcome():
             print("insert into <таблица> values (...) - добавить запись")
             print("select from <таблица> - показать записи")
             print("select from <таблица> where <столбец> = <значение> - поиск")
+            print("update <таблица> set <столбец> = <значение> where ... - изменение")
             print("help - справка")
             print("exit - выход")
 
@@ -163,6 +172,102 @@ def welcome():
                 table.add_row(values)
 
             print(table)
+
+        elif command.startswith("update "):
+            try:
+                parts = shlex.split(command)
+            except ValueError:
+                print("Ошибка: Проверьте кавычки.")
+                continue
+
+            if (
+                len(parts) != 10
+                or parts[2] != "set"
+                or parts[4] != "="
+                or parts[6] != "where"
+                or parts[8] != "="
+            ):
+                print('Пример: update users set age = 21 where name = "Anna"')
+                continue
+
+            table_name = parts[1]
+
+            if table_name not in metadata:
+                print(f'Ошибка: Таблица "{table_name}" не существует.')
+                continue
+
+            set_column = parts[3]
+            set_value = parts[5]
+
+            where_column = parts[7]
+            where_value = parts[9]
+
+            if set_column == "ID":
+                print("Ошибка: Нельзя изменять ID.")
+                continue
+
+            set_type = None
+            where_type = None
+
+            for column in metadata[table_name]:
+                name, data_type = column.split(":")
+
+                if name == set_column:
+                    set_type = data_type
+
+                if name == where_column:
+                    where_type = data_type
+
+            if set_type is None:
+                print(f'Ошибка: Столбец "{set_column}" не существует.')
+                continue
+
+            if where_type is None:
+                print(f'Ошибка: Столбец "{where_column}" не существует.')
+                continue
+
+            try:
+                if set_type == "int":
+                    set_value = int(set_value)
+
+                elif set_type == "bool":
+                    if set_value.lower() == "true":
+                        set_value = True
+                    elif set_value.lower() == "false":
+                        set_value = False
+                    else:
+                        raise ValueError
+
+                if where_type == "int":
+                    where_value = int(where_value)
+
+                elif where_type == "bool":
+                    if where_value.lower() == "true":
+                        where_value = True
+                    elif where_value.lower() == "false":
+                        where_value = False
+                    else:
+                        raise ValueError
+
+            except ValueError:
+                print("Ошибка: Некорректный тип значения.")
+                continue
+
+            table_data = load_table_data(table_name)
+
+            where_clause = {where_column: where_value}
+            set_clause = {set_column: set_value}
+
+            found = select(table_data, where_clause)
+
+            if not found:
+                print("Записи не найдены.")
+                continue
+
+            updated_data = update(table_data, set_clause, where_clause)
+            save_table_data(table_name, updated_data)
+
+            print(f"Обновлено записей: {len(found)}.")
 
         elif command == "exit":
             print("Выход из программы")

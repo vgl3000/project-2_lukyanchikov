@@ -26,3 +26,11 @@ def drop_table(metadata, table_name):
 
     del metadata[table_name]
     return metadata
+
+def list_tables(metadata):
+    if not metadata:
+        print("Таблиц пока нет.")
+        return
+
+    for table_name in metadata:
+        print(f"- {table_name}")

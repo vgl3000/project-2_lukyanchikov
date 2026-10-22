@@ -1,10 +1,11 @@
 import prompt
 
 from primitive_db.core import create_table, drop_table, list_tables
+from primitive_db.utils import load_metadata
 
 
 def welcome():
-    metadata = {}
+    metadata = load_metadata("db_meta.json")
 
     print("Первая попытка запустить проект!")
     print("create_table - создать таблицу")

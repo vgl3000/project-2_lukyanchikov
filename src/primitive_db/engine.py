@@ -1,8 +1,14 @@
 
 import prompt
+from prettytable import PrettyTable
 
-from primitive_db.core import create_table, drop_table, insert, list_tables
-from primitive_db.utils import load_metadata, save_metadata, save_table_data
+from primitive_db.core import create_table, drop_table, insert, list_tables, select
+from primitive_db.utils import (
+    load_metadata,
+    load_table_data,
+    save_metadata,
+    save_table_data,
+)
 
 
 def welcome():
@@ -13,6 +19,7 @@ def welcome():
     print("list_tables - список таблиц")
     print("drop_table - удалить таблицу")
     print("insert into <таблица> values (...) - добавить запись")
+    print("select from <таблица> - показать записи")
     print("help - справка")
     print("exit - выход")
 
@@ -24,6 +31,7 @@ def welcome():
             print("list_tables - список таблиц")
             print("drop_table - удалить таблицу")
             print("insert into <таблица> values (...) - добавить запись")
+            print("select from <таблица> - показать записи")
             print("help - справка")
             print("exit - выход")
 
@@ -57,7 +65,9 @@ def welcome():
                 table_name = parts[0].replace("insert into ", "").strip()
                 values_text = parts[1].strip()
 
-                if not values_text.startswith("(") or not values_text.endswith(")"):
+                if not (
+                    values_text.startswith("(") and values_text.endswith(")")
+                ):
                     print("Ошибка: Значения должны быть в скобках.")
                 else:
                     values_text = values_text[1:-1]
@@ -71,6 +81,38 @@ def welcome():
                     if table_data is not None:
                         save_table_data(table_name, table_data)
                         print(f'Запись добавлена в таблицу "{table_name}".')
+
+        elif command.startswith("select from "):
+            parts = command.split()
+
+            if len(parts) != 3:
+                print("Пример: select from users")
+            else:
+                table_name = parts[2]
+
+                if table_name not in metadata:
+                    print(f'Ошибка: Таблица "{table_name}" не существует.')
+                else:
+                    table_data = load_table_data(table_name)
+                    result = select(table_data)
+
+                    table = PrettyTable()
+                    column_names = []
+
+                    for column in metadata[table_name]:
+                        column_names.append(column.split(":")[0])
+
+                    table.field_names = column_names
+
+                    for row in result:
+                        values = []
+
+                        for name in column_names:
+                            values.append(row[name])
+
+                        table.add_row(values)
+
+                    print(table)
 
         elif command == "exit":
             print("Выход из программы")

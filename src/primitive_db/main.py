@@ -1,10 +1,12 @@
-#!/usr/bin/env python3
 
 from primitive_db.engine import welcome
 
 
 def main():
-    welcome()
+    try:
+        welcome()
+    except (KeyboardInterrupt, EOFError):
+        print("\nВыход из программы")
 
 
 if __name__ == "__main__":

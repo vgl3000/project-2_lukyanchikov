@@ -1,9 +1,13 @@
 
+"""Декораторы и кэширование."""
+
 import time
 from functools import wraps
 
 
 def handle_db_errors(func):
+    """Обрабатывает основные ошибки базы данных."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -22,6 +26,8 @@ def handle_db_errors(func):
 
 
 def confirm_action(action_name):
+    """Запрашивает подтверждение действия."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -41,14 +47,15 @@ def confirm_action(action_name):
 
 
 def log_time(func):
+    """Показывает время выполнения функции."""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.monotonic()
 
         result = func(*args, **kwargs)
 
-        end_time = time.monotonic()
-        elapsed_time = end_time - start_time
+        elapsed_time = time.monotonic() - start_time
 
         print(
             f"Функция {func.__name__} "
@@ -61,9 +68,11 @@ def log_time(func):
 
 
 def create_cacher():
+    """Создаёт кэш для результатов запросов."""
     cache = {}
 
     def cache_result(key, value_func):
+        """Возвращает результат из кэша или вычисляет его."""
         if key in cache:
             return cache[key]
 

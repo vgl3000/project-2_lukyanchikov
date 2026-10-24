@@ -1,10 +1,15 @@
 
+import json
+
 from primitive_db.decorators import (
     confirm_action,
+    create_cacher,
     handle_db_errors,
     log_time,
 )
 from primitive_db.utils import load_table_data
+
+select_cache = create_cacher()
 
 
 def create_table(metadata, table_name, columns):
@@ -94,23 +99,32 @@ def insert(metadata, table_name, values):
 
 @log_time
 def select(table_data, where_clause=None):
-    if where_clause is None:
-        return table_data
+    key = json.dumps(
+        {"data": table_data, "where": where_clause},
+        sort_keys=True,
+        ensure_ascii=False,
+    )
 
-    result = []
+    def find_records():
+        result = []
 
-    for row in table_data:
-        matches = True
+        for row in table_data:
+            matches = True
 
-        for column, value in where_clause.items():
-            if row.get(column) != value:
-                matches = False
-                break
+            if where_clause is not None:
+                for column, value in where_clause.items():
+                    if row.get(column) != value:
+                        matches = False
+                        break
 
-        if matches:
-            result.append(row)
+            if matches:
+                result.append(row.copy())
 
-    return result
+        return result
+
+    cached_rows = select_cache(key, find_records)
+
+    return [row.copy() for row in cached_rows]
 
 
 def update(table_data, set_clause, where_clause):

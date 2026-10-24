@@ -1,6 +1,7 @@
 
 import json
 
+from primitive_db.constants import ID_COLUMN, VALID_TYPES
 from primitive_db.decorators import (
     confirm_action,
     create_cacher,
@@ -13,9 +14,20 @@ select_cache = create_cacher()
 
 
 def create_table(metadata, table_name, columns):
+    """Создаёт таблицу и проверяет её столбцы."""
     if table_name in metadata:
         print(f'Ошибка: Таблица "{table_name}" уже существует.')
         return metadata
+
+    if not table_name.isidentifier():
+        print(f"Некорректное имя таблицы: {table_name}")
+        return metadata
+
+    if not columns:
+        print("Ошибка: Укажите столбцы таблицы.")
+        return metadata
+
+    column_names = {"ID"}
 
     for column in columns:
         parts = column.split(":")
@@ -24,18 +36,35 @@ def create_table(metadata, table_name, columns):
             print(f"Некорректный столбец: {column}")
             return metadata
 
-        column_type = parts[1]
+        column_name, column_type = parts
 
-        if column_type not in ["int", "str", "bool"]:
+        if not column_name.isidentifier():
+            print(f"Некорректное имя столбца: {column_name}")
+            return metadata
+
+        if column_name in column_names:
+            print(f'Ошибка: Столбец "{column_name}" повторяется.')
+            return metadata
+
+        if column_type not in VALID_TYPES:
             print(f"Некорректный тип данных: {column_type}")
             return metadata
 
-    metadata[table_name] = ["ID:int"] + columns
+        column_names.add(column_name)
+
+    metadata[table_name] = [ID_COLUMN] + columns
+
+    print(
+        f'Таблица "{table_name}" успешно создана '
+        f'со столбцами: {", ".join(metadata[table_name])}'
+    )
+
     return metadata
 
 
 @confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
+    """Удаляет таблицу и её файл с данными."""
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return metadata
@@ -47,6 +76,7 @@ def drop_table(metadata, table_name):
 
 
 def list_tables(metadata):
+    """Показывает список таблиц."""
     if not metadata:
         print("Таблиц пока нет.")
         return
@@ -58,6 +88,7 @@ def list_tables(metadata):
 @handle_db_errors
 @log_time
 def insert(metadata, table_name, values):
+    """Добавляет запись в таблицу."""
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return None
@@ -82,6 +113,9 @@ def insert(metadata, table_name, values):
         name, column_type = columns[i].split(":")
         value = values[i]
 
+        if value == "":
+            raise ValueError(f'Столбец "{name}" не может быть пустым.')
+
         if column_type == "int":
             value = int(value)
 
@@ -101,6 +135,7 @@ def insert(metadata, table_name, values):
 
 @log_time
 def select(table_data, where_clause=None):
+    """Возвращает записи по условию или все записи."""
     key = json.dumps(
         {"data": table_data, "where": where_clause},
         sort_keys=True,
@@ -130,6 +165,7 @@ def select(table_data, where_clause=None):
 
 
 def update(table_data, set_clause, where_clause):
+    """Изменяет записи по условию."""
     for row in table_data:
         matches = True
 
@@ -147,6 +183,7 @@ def update(table_data, set_clause, where_clause):
 
 @confirm_action("удаление записей")
 def delete(table_data, where_clause):
+    """Удаляет записи по условию."""
     result = []
 
     for row in table_data:

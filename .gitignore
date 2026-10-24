@@ -1,3 +1,4 @@
+
 .venv/
 dist/
 __pycache__/
@@ -5,3 +6,4 @@ __pycache__/
 .ruff_cache/
 data/
 db_meta.json
+*.cast

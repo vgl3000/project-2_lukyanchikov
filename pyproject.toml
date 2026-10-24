@@ -5,7 +5,7 @@ version = "0.1.0"
 description = "Учебная консольная база данных на Python"
 readme = "README.md"
 authors = [
-    { name = "User Namovich", email = "username@yandex.ru" }
+    { name = "vgl3000" }
 ]
 requires-python = ">=3.12"
 dependencies = [

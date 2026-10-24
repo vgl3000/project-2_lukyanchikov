@@ -1,10 +1,14 @@
 
-from primitive_db.engine import welcome
+#!/usr/bin/env python3
+"""Точка входа в программу."""
+
+from primitive_db.engine import run
 
 
 def main():
+    """Запускает базу данных."""
     try:
-        welcome()
+        run()
     except (KeyboardInterrupt, EOFError):
         print("\nВыход из программы")
 

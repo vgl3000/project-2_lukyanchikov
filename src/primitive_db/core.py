@@ -7,7 +7,7 @@ from primitive_db.decorators import (
     handle_db_errors,
     log_time,
 )
-from primitive_db.utils import load_table_data
+from primitive_db.utils import delete_table_data, load_table_data
 
 select_cache = create_cacher()
 
@@ -39,6 +39,8 @@ def drop_table(metadata, table_name):
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return metadata
+
+    delete_table_data(table_name)
 
     del metadata[table_name]
     return metadata

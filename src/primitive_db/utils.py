@@ -1,3 +1,4 @@
+
 import json
 import os
 
@@ -32,3 +33,10 @@ def save_table_data(table_name, data):
 
     with open(filepath, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
+
+
+def delete_table_data(table_name):
+    filepath = f"data/{table_name}.json"
+
+    if os.path.isfile(filepath):
+        os.remove(filepath)

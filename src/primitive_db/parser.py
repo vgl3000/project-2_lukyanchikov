@@ -5,7 +5,7 @@ import shlex
 
 
 def split_command(command):
-    """Разбивает команду на части, сохраняя текст в кавычках."""
+    """Разбивает команду на части."""
     lexer = shlex.shlex(command, posix=True, punctuation_chars="=")
     lexer.whitespace_split = True
     lexer.commenters = ""
@@ -13,7 +13,7 @@ def split_command(command):
 
 
 def parse_values(text):
-    """Разбирает значения для команды insert."""
+    """Разбирает значения для insert."""
     text = text.strip()
 
     if not text.startswith("(") or not text.endswith(")"):
@@ -28,7 +28,7 @@ def parse_values(text):
 
 
 def parse_condition(parts, columns):
-    """Разбирает условие вида age = 20 и проверяет тип."""
+    """Разбирает условие вида age = 20."""
     if isinstance(parts, str):
         parts = split_command(parts)
 
@@ -40,12 +40,16 @@ def parse_condition(parts, columns):
 
     for column in columns:
         column_name, data_type = column.split(":")
+
         if column_name == name:
             column_type = data_type
             break
 
     if column_type is None:
         raise ValueError(f'Столбец "{name}" не существует')
+
+    if not value.strip():
+        raise ValueError(f'Значение столбца "{name}" не может быть пустым')
 
     if column_type == "int":
         try:

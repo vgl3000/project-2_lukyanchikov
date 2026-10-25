@@ -1,4 +1,6 @@
 
+"""Основные функции базы данных."""
+
 import json
 
 from primitive_db.constants import ID_COLUMN, VALID_TYPES
@@ -13,6 +15,19 @@ from primitive_db.utils import delete_table_data, load_table_data
 select_cache = create_cacher()
 
 
+def matches_where(row, where_clause):
+    """Проверяет, подходит ли запись под условие."""
+    if where_clause is None:
+        return True
+
+    for column, value in where_clause.items():
+        if row.get(column) != value:
+            return False
+
+    return True
+
+
+@handle_db_errors
 def create_table(metadata, table_name, columns):
     """Создаёт таблицу и проверяет её столбцы."""
     if table_name in metadata:
@@ -62,6 +77,7 @@ def create_table(metadata, table_name, columns):
     return metadata
 
 
+@handle_db_errors
 @confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
     """Удаляет таблицу и её файл с данными."""
@@ -133,6 +149,7 @@ def insert(metadata, table_name, values):
     return table_data
 
 
+@handle_db_errors
 @log_time
 def select(table_data, where_clause=None):
     """Возвращает записи по условию или все записи."""
@@ -146,15 +163,7 @@ def select(table_data, where_clause=None):
         result = []
 
         for row in table_data:
-            matches = True
-
-            if where_clause is not None:
-                for column, value in where_clause.items():
-                    if row.get(column) != value:
-                        matches = False
-                        break
-
-            if matches:
+            if matches_where(row, where_clause):
                 result.append(row.copy())
 
         return result
@@ -164,37 +173,25 @@ def select(table_data, where_clause=None):
     return [row.copy() for row in cached_rows]
 
 
+@handle_db_errors
 def update(table_data, set_clause, where_clause):
     """Изменяет записи по условию."""
     for row in table_data:
-        matches = True
-
-        for column, value in where_clause.items():
-            if row.get(column) != value:
-                matches = False
-                break
-
-        if matches:
+        if matches_where(row, where_clause):
             for column, value in set_clause.items():
                 row[column] = value
 
     return table_data
 
 
+@handle_db_errors
 @confirm_action("удаление записей")
 def delete(table_data, where_clause):
     """Удаляет записи по условию."""
     result = []
 
     for row in table_data:
-        matches = True
-
-        for column, value in where_clause.items():
-            if row.get(column) != value:
-                matches = False
-                break
-
-        if not matches:
+        if not matches_where(row, where_clause):
             result.append(row)
 
     return result

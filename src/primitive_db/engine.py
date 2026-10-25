@@ -71,11 +71,13 @@ def drop_command(parts, metadata):
         return
 
     table_name = parts[1]
+
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return
 
     result = drop_table(metadata, table_name)
+
     if result is not None:
         save_metadata(META_FILE, metadata)
         print(f'Таблица "{table_name}" успешно удалена.')
@@ -94,10 +96,13 @@ def insert_command(command, metadata):
     values = parse_values(values_text)
     table_data = insert(metadata, table_name, values)
 
-    if table_data is not None:
-        save_table_data(table_name, table_data)
-        record_id = table_data[-1]["ID"]
-        print(f'Запись с ID={record_id} успешно добавлена в таблицу "{table_name}".')
+    if table_data is None:
+        return
+
+    save_table_data(table_name, table_data)
+    record_id = table_data[-1]["ID"]
+
+    print(f'Запись с ID={record_id} успешно добавлена в таблицу "{table_name}".')
 
 
 def select_command(parts, metadata):
@@ -107,18 +112,25 @@ def select_command(parts, metadata):
         return
 
     table_name = parts[2]
+
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return
 
     where_clause = None
+
     if len(parts) == 7:
         if parts[3] != "where":
             raise ValueError("Ожидалось where")
+
         where_clause = parse_condition(parts[4:7], metadata[table_name])
 
     table_data = load_table_data(table_name)
     rows = select(table_data, where_clause)
+
+    if rows is None:
+        return
+
     print_rows(metadata[table_name], rows)
 
 
@@ -129,6 +141,7 @@ def update_command(parts, metadata):
         return
 
     table_name = parts[1]
+
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return
@@ -143,11 +156,19 @@ def update_command(parts, metadata):
 
     table_data = load_table_data(table_name)
     found = select(table_data, where_clause)
+
+    if found is None:
+        return
+
     if not found:
         print("Записи не найдены.")
         return
 
     updated = update(table_data, set_clause, where_clause)
+
+    if updated is None:
+        return
+
     save_table_data(table_name, updated)
 
     if len(found) == 1:
@@ -166,6 +187,7 @@ def delete_command(parts, metadata):
         return
 
     table_name = parts[2]
+
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return
@@ -173,20 +195,28 @@ def delete_command(parts, metadata):
     where_clause = parse_condition(parts[4:7], metadata[table_name])
     table_data = load_table_data(table_name)
     found = select(table_data, where_clause)
+
+    if found is None:
+        return
+
     if not found:
         print("Записи не найдены.")
         return
 
     new_data = delete(table_data, where_clause)
-    if new_data is not None:
-        save_table_data(table_name, new_data)
-        if len(found) == 1:
-            print(
-                f'Запись с ID={found[0]["ID"]} успешно удалена '
-                f'из таблицы "{table_name}".'
-            )
-        else:
-            print(f"Удалено записей: {len(found)}.")
+
+    if new_data is None:
+        return
+
+    save_table_data(table_name, new_data)
+
+    if len(found) == 1:
+        print(
+            f'Запись с ID={found[0]["ID"]} успешно удалена '
+            f'из таблицы "{table_name}".'
+        )
+    else:
+        print(f"Удалено записей: {len(found)}.")
 
 
 def info_command(parts, metadata):
@@ -196,12 +226,14 @@ def info_command(parts, metadata):
         return
 
     table_name = parts[1]
+
     if table_name not in metadata:
         print(f'Ошибка: Таблица "{table_name}" не существует.')
         return
 
     columns = metadata[table_name]
     table_data = load_table_data(table_name)
+
     print(f"Таблица: {table_name}")
     print(f"Столбцы: {', '.join(columns)}")
     print(f"Количество записей: {len(table_data)}")
@@ -217,10 +249,12 @@ def run():
 
         try:
             parts = split_command(command)
+
             if not parts:
                 continue
 
             action = parts[0]
+
             if action == "help":
                 print_help()
             elif action == "exit":
@@ -244,5 +278,6 @@ def run():
                 info_command(parts, metadata)
             else:
                 print(f"Функции {action} нет. Попробуйте снова.")
+
         except ValueError as error:
             print(f"Некорректное значение: {error}. Попробуйте снова.")
